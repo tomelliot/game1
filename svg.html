@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+</head> 
+<svg id=g width="500" height="100" style='background-color: grey;'>
+</svg>
+
+<script>
+    var xmlns = "http://www.w3.org/2000/svg";
+
+    var svgWidth = 1000
+
+    var Cols = ['a', 'b', 'c', 'd','e','f','g','h','i','j','k']
+    var Rows = [1, 2, 3, 4, 5]
+    var nbHexAcross = Cols.length
+    var hexWidth = svgWidth/(nbHexAcross)
+    var hexHeight = Math.sqrt(2)*hexWidth - hexWidth
+    var hexSideLength = Math.sqrt(2)*hexWidth
+    var svgHeight = (Rows.length+1)*hexHeight
+
+    var points = [] // holds the location & state of each point
+
+    function point (name, x, y) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.state = "blank"
+    }
+
+    function resizeSvg(width, height) {
+        g.setAttribute("width", width);
+        g.setAttribute("height", height);
+    }
+
+    function drawPoint(name, x, y, radius) {
+        drawPoint.count = ++drawPoint.count || 1
+        var newPoint = document.createElementNS(xmlns, "circle");
+        newPoint.setAttributeNS(null,"id", name);
+        newPoint.setAttributeNS(null,"cx",x);
+        newPoint.setAttributeNS(null,"cy",y);
+        newPoint.setAttributeNS(null,"r",radius);
+        newPoint.setAttributeNS(null,"fill", "blue");
+        newPoint.setAttributeNS(null,"onclick", "changeState(\"" + name + "\")")
+        g.appendChild(newPoint);
+    };
+
+    function changeState(pointName) {
+        thisPoint = points[pointName];
+        switch (thisPoint.state) {
+            case "blank":
+            thisPoint.state = "playerA"
+            break;
+            case "playerA":
+            thisPoint.state = "playerB"
+            break;
+            case "playerB":
+            thisPoint.state = "MAGIC"
+            break;
+            case "MAGIC":
+            thisPoint.state = "blank"
+            break;
+            case "default":
+            thisPoint.state = "playerA"
+            break;
+        }
+        console.log(pointName)
+        updateBoard();
+    }
+
+    function updatePoint(pointName) {
+        pt = $("#"+pointName)[0]
+        thisPoint = points[pointName]
+        switch (thisPoint.state) {
+            case "blank":
+            pt.setAttribute("fill","red")
+            break;
+            case "playerA":
+            pt.setAttribute("fill","green")
+            break;
+            case "playerB":
+            pt.setAttribute("fill","orange")
+            break;
+            case "default":
+            pt.setAttribute("fill","white")
+            break;
+        }
+    }
+
+    function updateBoard() {
+        for (var i in points) {
+            if (points.hasOwnProperty(i)) {
+                updatePoint(points[i].name);
+            }
+        }
+    }
+
+    function generateGrid() {
+        for (var rowIdx = Rows.length - 1; rowIdx >= 0; rowIdx--) {
+            var yOffset = 1;
+            xOffset = rowIdx*0.5-0.5;
+            for (var colIdx = Cols.length - 1; colIdx >= 0; colIdx--) {
+                name = Cols[colIdx]+Rows[rowIdx];
+                if (["a1", "a2", "b1", "j5", "k4", "k5"].indexOf(name) >= 0) {
+                    // don't generate points where they don't exist on the board
+                    continue
+                }
+                x = (colIdx+xOffset)*hexWidth
+                y = (rowIdx+yOffset)*hexHeight
+                drawPoint(name, x, y, 10);
+                points[name] = new point(name, x, y)
+            }
+        }
+    };
+
+    $(function() {
+        resizeSvg(svgWidth, svgHeight);
+        generateGrid();
+        updateBoard();
+    });
+</script>
+</html>
