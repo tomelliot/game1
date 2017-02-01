@@ -6,9 +6,12 @@
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"
     integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
     crossorigin="anonymous"></script>
+    <title>player {{ game_state['player'] }} game1</title>
 </head> 
 <svg id=g width="500" height="100" style='background-color: grey;'>
 </svg>
+
+<h1>player {{ game_state['player'] }} game1</h1>
 
 <script>
     var xmlns = "http://www.w3.org/2000/svg";
@@ -52,35 +55,16 @@
 
     function changeState(pointName) {
         thisPoint = points[pointName];
-        switch (thisPoint.state) {
-            case "blank":
-            thisPoint.state = "playerA"
-            break;
-            case "playerA":
-            thisPoint.state = "playerB"
-            break;
-            case "playerB":
-            thisPoint.state = "MAGIC"
-            break;
-            case "MAGIC":
-            thisPoint.state = "blank"
-            break;
-            case "default":
-            thisPoint.state = "playerA"
-            break;
-        }
-        game_state[pointName] = thisPoint.state
+
         // can't use $.post() to send JSON data - need access to contentType:
         $.ajax({
             type: 'POST',
-            url: "http://127.0.0.1:5000/new_move/1/"+pointName+"/",
+            url: "http://127.0.0.1:5000/new_move/"+game_state["player"]+"/"+pointName+"/",
             data: JSON.stringify(game_state),
-            success: updateBoard(),
+            success: function(data) {updateBoard(data['game_state']);},
             contentType: "application/json",
             dataType: 'json'
         });
-        console.log(pointName)
-        // updateBoard();
     }
 
     function updatePoint(pointName) {
@@ -90,10 +74,10 @@
             case "blank":
             pt.setAttribute("fill","red")
             break;
-            case "playerA":
+            case "A":
             pt.setAttribute("fill","green")
             break;
-            case "playerB":
+            case "B":
             pt.setAttribute("fill","orange")
             break;
             case "default":
@@ -102,16 +86,17 @@
         }
     }
 
-    function updateBoard() {
+    function updateBoard(new_game_state) {
+        console.log(new_game_state)
         for (var i in points) {
             if (points.hasOwnProperty(i)) {
+                points[i].state = new_game_state[points[i].name]
                 updatePoint(points[i].name);
             }
         }
     }
 
     function generateGrid() {
-        console.log("game state: " + game_state['new_game'])
         for (var rowIdx = Rows.length - 1; rowIdx >= 0; rowIdx--) {
             var yOffset = 1;
             xOffset = rowIdx*0.5-0.5;
@@ -125,26 +110,14 @@
                 y = (rowIdx+yOffset)*hexHeight
                 drawPoint(name, x, y, 10);
                 points[name] = new point(name, x, y)
-                if (game_state['new_game']) {
-                    game_state[name] = "blank"
-                } else {
-                    for (var i in points) {
-                        if (points.hasOwnProperty(i)) {
-                            console.log(name)
-                            console.log(game_state[points[i].name])
-                            points[i].state = game_state[points[i].name]
-                        }
-                    }
-                }
             }
         }
-        game_state['new_game'] = 'False'
     };
 
     $(function() {
         resizeSvg(svgWidth, svgHeight);
         generateGrid();
-        updateBoard();
+        updateBoard(game_state);
     });
 </script>
 </html>
