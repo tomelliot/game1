@@ -6,6 +6,15 @@
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"
     integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
     crossorigin="anonymous"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    // var socket = io.connect('http://' + document.domain + ':' + location.port);
+    var socket = io.connect('http://127.0.0.1:5000');
+    socket.on('connect', function() {
+        socket.emit('my event', {data: 'I\'m connected!'});
+    });
+    </script>
+
     <title>player {{ game_state['player'] }} game1</title>
 </head> 
 <svg id=g width="500" height="100" style='background-color: grey;'>
@@ -55,16 +64,18 @@
 
     function changeState(pointName) {
         thisPoint = points[pointName];
-
+        console.log(pointName)
         // can't use $.post() to send JSON data - need access to contentType:
         $.ajax({
             type: 'POST',
             url: "http://127.0.0.1:5000/new_move/"+game_state["player"]+"/"+pointName+"/",
             data: JSON.stringify(game_state),
-            success: function(data) {updateBoard(data['game_state']);},
+            // success: function(data) {console.log("POST successful"); updateBoard(data['game_state']);},
+            success: function(data) {console.log("POST successful"); console.log(data)},
             contentType: "application/json",
             dataType: 'json'
         });
+        console.log(pointName + " POST sent")
     }
 
     function updatePoint(pointName) {
@@ -113,6 +124,12 @@
             }
         }
     };
+
+    socket.on('update_board', function(data){
+        console.log("update_board");
+        updateBoard(data);
+    });
+
 
     $(function() {
         resizeSvg(svgWidth, svgHeight);
