@@ -84,14 +84,48 @@ def do_game(player, point):
         game_state["selected"] = ""
     elif (game_state["selected"] == ""):
         # select point
-        game_state["selected"] = point
+        if (game_state[point][-1] == player):
+            # make sure the stack belongs to this player
+            game_state["selected"] = point
     else:
-        # move a stack
-        [game_state[point].append(a) for a in game_state[game_state["selected"]]]
-        game_state[game_state["selected"]] = []
-        game_state["selected"] = ""
-        game_state["current_turn"] = next_player(player)
+        if check_valid_move(game_state["selected"], point, player):
+            # move a stack
+            # add stack from old location onto the stack at the new location
+            [game_state[point].append(a) for a in game_state[game_state["selected"]]]
+            # set stack at old location to empty
+            game_state[game_state["selected"]] = []
+            game_state["selected"] = ""
+            game_state["current_turn"] = next_player(player)
     return
+
+def check_move_length(start_point, end_point):
+        status = True
+        move_length = 0
+        row_delta = abs(ord(end_point[0]) - ord(start_point[0]))
+        column_delta = abs(int(end_point[1]) - int(start_point[1]))
+        if (start_point[0] == end_point[0]):
+            # same column
+            move_length = column_delta
+        elif (start_point[1] == end_point[1]):
+            # same row
+            move_length = row_delta
+        else:
+            # only other move is across both rows and columns
+            if row_delta != column_delta:
+                # this move is "diagonal": The number of rows skipped has to equal the number of columns skipped
+                return False
+            move_length = row_delta
+        if (move_length != len(game_state[start_point])):
+            return False
+        return True
+
+def check_valid_move(start_point, end_point, player):
+    if game_state[end_point] == []:
+        # is destination empty?
+        return False
+    if not check_move_length(start_point, end_point):
+        return False
+    return True
 
 if __name__ == "__main__":
     # app.run(debug=True)
