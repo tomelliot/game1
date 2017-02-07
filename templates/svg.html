@@ -27,17 +27,20 @@
 <script>
     var xmlns = "http://www.w3.org/2000/svg";
 
-    var svgWidth = 1000
+    var point_diameter = 20
+    var highlight_diameter = 2*point_diameter
+    var tile_diameter = 20
+    var tile_offset = tile_diameter/4
+
+
     var player = '{{ player }}'
     var Cols = ['a', 'b', 'c', 'd','e','f','g','h','i','j','k']
     var Rows = [1, 2, 3, 4, 5]
     var nbHexAcross = Cols.length
-    var hexWidth = svgWidth/(nbHexAcross)
-    var hexHeight = Math.sqrt(2)*hexWidth - hexWidth
-    var hexSideLength = Math.sqrt(2)*hexWidth
+    var hexWidth = 3*tile_diameter
+    var hexHeight = 3*tile_diameter
+    var svgWidth = hexWidth*(nbHexAcross+1)
     var svgHeight = (Rows.length+1)*hexHeight
-    var tile_diameter = 10
-    var tile_offset = tile_diameter/3
 
     var points = [] // holds the location & state of each point
     var highlights = [] // holds the location & state of each point
@@ -104,11 +107,9 @@
 
     function updatePoint(pointName) {
         pt = $("#"+pointName)[0]
-        h = $("#h_"+pointName)[0]
-
         thisPoint = points[pointName]
-        thisHighlight = highlights[pointName]
         pt.setAttribute("fill","white")
+        g.appendChild(pt);
         for (var i in thisPoint.state) {
             switch(thisPoint.state[i]) {
                 case "A":
@@ -118,22 +119,47 @@
                     var color = "blue"
                     break;
                 case "magic":
-                default:
                     var color = "orange"
                     break;
+                default:
+                    var color = "white"
+                    break;
             }
-            drawTile(pointName, thisPoint.x + i*tile_offset, thisPoint.y, tile_diameter, color);
+            drawTile(pointName, thisPoint.x + i*tile_offset, thisPoint.y - i*tile_offset, tile_diameter, color);
+        }
+    }
+
+    function updatePoints() {
+        for (var i in points) {
+            if (points.hasOwnProperty(i)) {
+                updatePoint(points[i].name);
+            }
+        }
+    }
+
+    function updateHighlights() {
+        var pointsToHighlight = []
+        for (var i in points) {
+            pointName = points[i].name
+            pt = $("#"+pointName)[0]
+            thisPoint = points[pointName]
+            h = $("#h_"+pointName)[0]
+            thisHighlight = highlights[pointName]
+
+            if (thisPoint.highlight) {
+                pointsToHighlight.push(h)
+            } else {
+                h.setAttribute("fill", "grey");
+            }
         }
 
-        if (thisPoint.highlight) {
-            h.setAttribute("fill", "yellow")
-        } else {
-            h.setAttribute("fill", "grey")
+        for (var i in pointsToHighlight) {
+            pointsToHighlight[i].setAttribute("fill", "yellow");
+            g.appendChild(pointsToHighlight[i])
         }
     }
 
     function updateBoard(new_game_state) {
-        removeTiles(tiles);
         for (var i in points) {
             if (points.hasOwnProperty(i)) {
                 points[i].state = new_game_state[points[i].name]
@@ -142,15 +168,17 @@
                 } else {
                     points[i].highlight = false;
                 }
-                updatePoint(points[i].name);
             }
         }
+        removeTiles(tiles);
+        updateHighlights();
+        updatePoints();
     }
 
     function generateGrid() {
         for (var rowIdx = Rows.length - 1; rowIdx >= 0; rowIdx--) {
             var yOffset = 1;
-            xOffset = rowIdx*0.5-0.5;
+            xOffset = rowIdx*0.5;
             for (var colIdx = Cols.length - 1; colIdx >= 0; colIdx--) {
                 name = Cols[colIdx]+Rows[rowIdx];
                 if (["a1", "a2", "b1", "j5", "k4", "k5"].indexOf(name) >= 0) {
@@ -159,9 +187,9 @@
                 }
                 x = (colIdx+xOffset)*hexWidth
                 y = (rowIdx+yOffset)*hexHeight
-                drawPoint("h_" + name, x, y, 20);
+                drawPoint("h_" + name, x, y, highlight_diameter);
                 highlights[name] = new point("h_"+name, x, y)
-                drawPoint(name, x, y, 10);
+                drawPoint(name, x, y, point_diameter);
                 points[name] = new point(name, x, y)
             }
         }
@@ -169,7 +197,6 @@
 
     socket.on('update_board', function(data){
         game_state = data;
-        console.log("update_board");
         updateBoard(data);
     });
 
