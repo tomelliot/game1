@@ -36,13 +36,15 @@
     var svgHeight = (Rows.length+1)*hexHeight
 
     var points = [] // holds the location & state of each point
+    var highlights = [] // holds the location & state of each point
     var game_state = {{ game_state | tojson}}
 
     function point (name, x, y) {
         this.name = name;
         this.x = x;
         this.y = y;
-        this.state = "blank"
+        this.state = "blank";
+        this.highlight = false;
     }
 
     function resizeSvg(width, height) {
@@ -64,23 +66,25 @@
 
     function changeState(pointName) {
         thisPoint = points[pointName];
-        console.log(pointName)
         // can't use $.post() to send JSON data - need access to contentType:
         $.ajax({
             type: 'POST',
-            url: "http://127.0.0.1:5000/new_move/"+game_state["player"]+"/"+pointName+"/",
+            url: "http://127.0.0.1:5000/new_click/"+game_state["player"]+"/"+pointName+"/",
             data: JSON.stringify(game_state),
             // success: function(data) {console.log("POST successful"); updateBoard(data['game_state']);},
             success: function(data) {console.log("POST successful"); console.log(data)},
             contentType: "application/json",
             dataType: 'json'
         });
-        console.log(pointName + " POST sent")
     }
 
     function updatePoint(pointName) {
         pt = $("#"+pointName)[0]
+        h = $("#h_"+pointName)[0]
+
         thisPoint = points[pointName]
+        thisHighlight = highlights[pointName]
+
         switch (thisPoint.state) {
             case "blank":
             pt.setAttribute("fill","red")
@@ -95,13 +99,23 @@
             pt.setAttribute("fill","white")
             break;
         }
+
+        if (thisPoint.highlight) {
+            h.setAttribute("fill", "green")
+        } else {
+            h.setAttribute("fill", "blue")
+        }
     }
 
     function updateBoard(new_game_state) {
-        console.log(new_game_state)
         for (var i in points) {
             if (points.hasOwnProperty(i)) {
                 points[i].state = new_game_state[points[i].name]
+                if (new_game_state["selected"] == i) {
+                    points[i].highlight = true;
+                } else {
+                    points[i].highlight = false;
+                }
                 updatePoint(points[i].name);
             }
         }
@@ -119,6 +133,8 @@
                 }
                 x = (colIdx+xOffset)*hexWidth
                 y = (rowIdx+yOffset)*hexHeight
+                drawPoint("h_" + name, x, y, 20);
+                highlights[name] = new point("h_"+name, x, y)
                 drawPoint(name, x, y, 10);
                 points[name] = new point(name, x, y)
             }
@@ -126,6 +142,7 @@
     };
 
     socket.on('update_board', function(data){
+        game_state = data;
         console.log("update_board");
         updateBoard(data);
     });
