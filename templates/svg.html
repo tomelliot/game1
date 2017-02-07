@@ -15,18 +15,20 @@
     });
     </script>
 
-    <title>player {{ game_state['player'] }} game1</title>
+    <title>player {{ player }} game1</title>
 </head> 
 <svg id=g width="500" height="100" style='background-color: grey;'>
 </svg>
 
-<h1>player {{ game_state['player'] }} game1</h1>
+<h1>player {{ player }} game1</h1>
+    <p>
+    <a href="http://127.0.0.1:5000/reset/"> reset </a>
 
 <script>
     var xmlns = "http://www.w3.org/2000/svg";
 
     var svgWidth = 1000
-
+    var player = '{{ player }}'
     var Cols = ['a', 'b', 'c', 'd','e','f','g','h','i','j','k']
     var Rows = [1, 2, 3, 4, 5]
     var nbHexAcross = Cols.length
@@ -34,16 +36,19 @@
     var hexHeight = Math.sqrt(2)*hexWidth - hexWidth
     var hexSideLength = Math.sqrt(2)*hexWidth
     var svgHeight = (Rows.length+1)*hexHeight
+    var tile_diameter = 10
+    var tile_offset = tile_diameter/3
 
     var points = [] // holds the location & state of each point
     var highlights = [] // holds the location & state of each point
+    var tiles = [] // holds the location & state of each point
     var game_state = {{ game_state | tojson}}
 
     function point (name, x, y) {
         this.name = name;
         this.x = x;
         this.y = y;
-        this.state = "blank";
+        this.state = [];
         this.highlight = false;
     }
 
@@ -64,14 +69,33 @@
         g.appendChild(newPoint);
     };
 
+    function drawTile(name, x, y, radius, color) {
+        drawTile.count = ++drawTile.count || 1
+        var newPoint = document.createElementNS(xmlns, "circle");
+        newPoint.setAttributeNS(null,"id", "tile_" + drawTile.count);
+        newPoint.setAttributeNS(null,"cx",x);
+        newPoint.setAttributeNS(null,"cy",y);
+        newPoint.setAttributeNS(null,"r",radius);
+        newPoint.setAttributeNS(null,"fill", color);
+        newPoint.setAttributeNS(null,"stroke", "black");
+        newPoint.setAttributeNS(null,"onclick", "changeState(\"" + name + "\")")
+        g.appendChild(newPoint);
+        tiles.push(newPoint)
+    };
+
+    function removeTiles(tiles_to_remove) {
+        for (var i in tiles_to_remove) {
+            tiles_to_remove[i].remove()
+        }
+    }
+
     function changeState(pointName) {
         thisPoint = points[pointName];
         // can't use $.post() to send JSON data - need access to contentType:
         $.ajax({
             type: 'POST',
-            url: "http://127.0.0.1:5000/new_click/"+game_state["player"]+"/"+pointName+"/",
+            url: "http://127.0.0.1:5000/new_click/"+ player +"/"+pointName+"/",
             data: JSON.stringify(game_state),
-            // success: function(data) {console.log("POST successful"); updateBoard(data['game_state']);},
             success: function(data) {console.log("POST successful"); console.log(data)},
             contentType: "application/json",
             dataType: 'json'
@@ -84,30 +108,25 @@
 
         thisPoint = points[pointName]
         thisHighlight = highlights[pointName]
-
-        switch (thisPoint.state) {
-            case "blank":
-            pt.setAttribute("fill","red")
-            break;
-            case "A":
-            pt.setAttribute("fill","green")
-            break;
-            case "B":
-            pt.setAttribute("fill","orange")
-            break;
-            case "default":
-            pt.setAttribute("fill","white")
-            break;
+        pt.setAttribute("fill","white")
+        for (var i in thisPoint.state) {
+            if (thisPoint.state[i] == "A") {
+                var color = "green"
+            } else {
+                var color = "orange"
+            }
+            drawTile(pointName, thisPoint.x + i*tile_offset, thisPoint.y, tile_diameter, color);
         }
 
         if (thisPoint.highlight) {
-            h.setAttribute("fill", "green")
+            h.setAttribute("fill", "yellow")
         } else {
-            h.setAttribute("fill", "blue")
+            h.setAttribute("fill", "grey")
         }
     }
 
     function updateBoard(new_game_state) {
+        removeTiles(tiles);
         for (var i in points) {
             if (points.hasOwnProperty(i)) {
                 points[i].state = new_game_state[points[i].name]
@@ -146,7 +165,6 @@
         console.log("update_board");
         updateBoard(data);
     });
-
 
     $(function() {
         resizeSvg(svgWidth, svgHeight);
