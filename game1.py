@@ -19,13 +19,13 @@ new_game_state = {"current_turn": "A",
 dummy_game_state = {"current_turn": "A",
                                 "setup": False,
                                 "selected": "",
-                                "c1": ["A"], "d1": ["B"], "e1": ["A"], "f1": ["B"], "g1": ["A"], "h1": ["B"], "i1": ["A"], "j1": ["B"], "k1": ["A"],
-                                "b2": ["A"], "c2": ["B"], "d2": ["A"], "e2": ["B"], "f2": ["A"], "g2": ["B"], "h2": ["A"], "i2": ["B"], "j2": ["A"], "k2": ["B"], 
+                                "c1": ["magic"], "d1": ["B"], "e1": ["A"], "f1": ["B"], "g1": ["A"], "h1": ["B"], "i1": ["A"], "j1": ["B"], "k1": ["A"],
+                                "b2": ["A"], "c2": ["magic"], "d2": ["A"], "e2": ["B"], "f2": ["A"], "g2": ["B"], "h2": ["A"], "i2": ["B"], "j2": ["A"], "k2": ["B"], 
                                 "a3": ["A"], "b3": ["B"], "c3": ["A"], "d3": ["B"], "e3": ["A"], "f3": ["B"], "g3": ["A"], "h3": ["B"], "i3": ["A"], "j3": ["B"], "k3": ["A"], 
-                                "a4": ["A"], "b4": ["B"], "c4": ["A"], "d4": ["B"], "e4": ["A"], "f4": ["B"], "g4": ["A"], "h4": ["B"], "i4": ["A"], "j4": ["B"], 
+                                "a4": ["A"], "b4": ["B"], "c4": ["A"], "d4": ["B"], "e4": ["A"], "f4": ["magic"], "g4": ["A"], "h4": ["B"], "i4": ["A"], "j4": ["B"], 
                                 "a5": ["A"], "b5": ["B"], "c5": ["A"], "d5": ["B"], "e5": ["A"], "f5": ["B"], "g5": ["A"], "h5": ["B"], "i5": ["A"]}
 
-
+magics_to_place = 3
 game_state = dummy_game_state
 
 @app.route("/")
@@ -75,7 +75,11 @@ def do_game(player, point):
     if (game_state["setup"] == True):
         # change ownership of point if a user selects one
         if game_state[point] == "[]":
-            game_state[point] = player
+            if magics_to_place:
+                game_state[point] = "magic"
+                magics_to_place = magics_to_place - 1
+            else:
+                game_state[point] = player
             game_state["current_turn"] = next_player(player)
         return
 

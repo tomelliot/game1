@@ -110,10 +110,17 @@
         thisHighlight = highlights[pointName]
         pt.setAttribute("fill","white")
         for (var i in thisPoint.state) {
-            if (thisPoint.state[i] == "A") {
-                var color = "green"
-            } else {
-                var color = "orange"
+            switch(thisPoint.state[i]) {
+                case "A":
+                    var color = "green"
+                    break;
+                case "B":
+                    var color = "blue"
+                    break;
+                case "magic":
+                default:
+                    var color = "orange"
+                    break;
             }
             drawTile(pointName, thisPoint.x + i*tile_offset, thisPoint.y, tile_diameter, color);
         }
