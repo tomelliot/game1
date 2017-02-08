@@ -135,9 +135,56 @@ def check_valid_move(start_point, end_point, player):
     if game_state[end_point] == []:
         # is destination empty?
         return False
+    if surrounded(start_point):
+        return False
     if not check_move_length(start_point, end_point):
         return False
     return True
+
+def surrounded(point):
+    # check if a point is surrounded.
+    # only tiles that are not surrounded are allowed to move
+    edge_points = ['']
+    if point[1] in ['1', '5']:
+        # top row and bottom row
+        return False
+    if point[0] in ['a', 'k']:
+        # first column and last column
+        return False
+    if point in ['b2', 'j4']:
+        return False
+    if [] in [game_state[a] for a in get_valid_neighbours(point)]:
+        # point has at least one empty neighbour
+        return False
+    return True
+
+def get_valid_neighbours(point):
+    # return names of neighbouring points
+
+    column = ord(point[0])
+    prev_column = chr(column-1)
+    next_column = chr(column+1)
+    row = int(point[1])
+    prev_row = row-1
+    next_row = row+1
+
+    # dumb add all possible neighbours
+    neighbours = []
+    neighbours.append(chr(column-1)+str(row))
+    neighbours.append(chr(column+1)+str(row))
+    neighbours.append(chr(column)+str(row-1))
+    neighbours.append(chr(column+1)+str(row-1))
+    neighbours.append(chr(column-1)+str(row+1))
+    neighbours.append(chr(column)+str(row+1))
+
+    # remove neighbours that don't exist on the board
+    bad_board_points = ["a1", "a2", "b1", "j5", "k4", "k5"]
+    neighbours = [a for a in neighbours if a not in bad_board_points]
+    neighbours = [a for a in neighbours if '0' not in a]
+    neighbours = [a for a in neighbours if '6' not in a]
+    neighbours = [a for a in neighbours if 'l' not in a]
+    neighbours = [a for a in neighbours if '`' not in a]
+    return neighbours
 
 if __name__ == "__main__":
     # app.run(debug=True)
