@@ -105,8 +105,10 @@ def do_game(player, point):
 def check_move_length(start_point, end_point):
         status = True
         move_length = 0
-        row_delta = abs(ord(end_point[0]) - ord(start_point[0]))
-        column_delta = abs(int(end_point[1]) - int(start_point[1]))
+        row_move = ord(end_point[0]) - ord(start_point[0])
+        row_delta = abs(row_move)
+        column_move = int(end_point[1]) - int(start_point[1])
+        column_delta = abs(column_move)
         if (start_point[0] == end_point[0]):
             # same column
             move_length = column_delta
@@ -117,6 +119,12 @@ def check_move_length(start_point, end_point):
             # only other move is across both rows and columns
             if row_delta != column_delta:
                 # this move is "diagonal": The number of rows skipped has to equal the number of columns skipped
+                return False
+            if (column_move + row_move) != 0:
+                # need to check that the diagonal is in the right direction
+                # otherwise it would be possible to move from C2 to D3 for example
+                # A valid diagonal move is either increasing in row number and decreasing in column number
+                # or vice versa. As they're the same magnitude, adding together should == 0.
                 return False
             move_length = row_delta
         if (move_length != len(game_state[start_point])):
