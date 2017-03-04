@@ -2,12 +2,17 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import jsonify
+from flask import redirect
 from flask_socketio import SocketIO
+from flask_login import LoginManager
 
 app = Flask(__name__)
 socketio = SocketIO(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-empty_point = []
+
+empty_point = [] # we use this to represent any point on the board that doesn't have any tiles on it
 
 new_game_state = {"current_turn": "A",
                                 "setup": True,
@@ -42,6 +47,12 @@ game_points =   ["c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1",
                             "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "i4", "j4", 
                             "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "i5"]
 
+users = [{"name":"Tom", "img":"img1"}, 
+              {"name":"Rebort", "img":"img2"}]
+
+games = {"Tom": [1, 2, 3],
+                 "Rebort": [3, 4, 5]}
+
 magics_to_place = 3
 game_state = dummy_game_state1
 
@@ -60,6 +71,20 @@ def hello_A():
 def hello_B():
     player = "B"
     return render_template("svg.html", game_state=game_state, player=player)
+
+@app.route("/login")
+def login():
+    return render_template("login.html", users=users)
+
+@app.route("/login/<user>")
+def login_user(user):
+    if user in [a['name'] for a in users]:
+        return redirect("/home/"+user)
+    return redirect("/login")
+
+@app.route("/home/<user>")
+def home(user):
+    return render_template("home.html", user=user, games=games[user])
 
 # @app.route("/reset/")
 # def reset():
