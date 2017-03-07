@@ -1,13 +1,23 @@
 {% extends "layout.html" %}
 {% block title %}{{ player }}{% endblock %}
 
+{% block head %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+        <script>
+            var socket = io.connect('http://127.0.0.1:5000');
+            socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+            });
+        </script>
+
+{% endblock %}
+
 {% block content %}
-<svg id=g width="500" height="100" style='background-color: grey;'>
-</svg>
 
 <h1>player {{ player }} game1</h1>
-    <p>
-    <a href="http://127.0.0.1:5000/reset/"> reset </a>
+
+<svg id=g width="500" height="100" style='background-color: grey;'>
+</svg>
 
 <script>
     var xmlns = "http://www.w3.org/2000/svg";
@@ -31,6 +41,7 @@
     var highlights = [] // holds the location & state of each point
     var tiles = [] // holds the location & state of each point
     var game_state = {{ game_state | tojson}}
+    var game_id = game_state['game_id']
 
     function point (name, x, y) {
         this.name = name;
@@ -82,7 +93,7 @@
         // can't use $.post() to send JSON data - need access to contentType:
         $.ajax({
             type: 'POST',
-            url: "http://127.0.0.1:5000/new_click/"+ player +"/"+pointName+"/",
+            url: "http://127.0.0.1:5000/new_click/"+ player +"/"+game_id+"/"+pointName+"/",
             data: JSON.stringify(game_state),
             success: function(data) {console.log("POST successful"); console.log(data)},
             contentType: "application/json",

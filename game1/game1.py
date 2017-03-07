@@ -3,18 +3,32 @@ from flask import render_template
 from flask import request
 from flask import jsonify
 from flask import redirect
+from flask_login import LoginManager, UserMixin, login_required, current_user
+import flask_login
 from flask_socketio import SocketIO
-from flask_login import LoginManager
+from flask_sqlalchemy import SQLAlchemy
+
+# best practice is to move config to file and load from disk on start, and remove file from repo to keep secret a secret
+config = {'secret': '1z\xff\xcbZ\xe7e\xbbE\xc5\x9f\x07\xee/\xb1\x92\xa4\xd0\x16\xb2>{\xe9\xb2'}
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+app.secret_key = config['secret'] # need to specify a secret key so flask can manage client sessions
+
+# manage user logins
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+# manage sockets - live updating of board across different screens
+socketio = SocketIO(app)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////db/test.db'
+db = SQLAlchemy(app)
 
 empty_point = [] # we use this to represent any point on the board that doesn't have any tiles on it
 
-new_game_state = {"current_turn": "A",
+default_new_game_state = {"current_turn": "A",
+                                "playerA":"A",
+                                "playerB":"B",
                                 "setup": True,
                                 "selected": "",
                                 "c1": empty_point, "d1": empty_point, "e1": empty_point, "f1": empty_point, "g1": empty_point, "h1": empty_point, "i1": empty_point, "j1": empty_point, "k1": empty_point,
@@ -24,6 +38,8 @@ new_game_state = {"current_turn": "A",
                                 "a5": empty_point, "b5": empty_point, "c5": empty_point, "d5": empty_point, "e5": empty_point, "f5": empty_point, "g5": empty_point, "h5": empty_point, "i5": empty_point}
 
 dummy_game_state = {"current_turn": "A",
+                                "playerA":"A",
+                                "playerB":"B",
                                 "setup": False,
                                 "selected": "",
                                 "c1": ["magic"], "d1": ["B"], "e1": ["A"], "f1": ["B"], "g1": ["A"], "h1": ["B"], "i1": ["A"], "j1": ["B"], "k1": ["A"],
@@ -33,6 +49,8 @@ dummy_game_state = {"current_turn": "A",
                                 "a5": ["A"], "b5": ["B"], "c5": ["A"], "d5": ["B"], "e5": ["A"], "f5": ["B"], "g5": ["A"], "h5": ["B"], "i5": ["A"]}
 
 dummy_game_state1 = {"current_turn": "A",
+                                "playerA":"A",
+                                "playerB":"B",
                                 "setup": False,
                                 "selected": "",
                                 "c1": ["magic"], "d1": ["B"], "e1": ["A"], "f1": empty_point, "g1": ["A"], "h1": ["B"], "i1": ["A"], "j1": ["B"], "k1": ["A"],
@@ -47,14 +65,62 @@ game_points =   ["c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1",
                             "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "i4", "j4", 
                             "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "i5"]
 
-users = [{"name":"Tom", "img":"img1"}, 
-              {"name":"Rebort", "img":"img2"}]
+magics_to_place = 3
 
-games = {"Tom": [1, 2, 3],
+games = {'1': dummy_game_state1, '2':default_new_game_state}
+games['1']['game_id'] = '1'
+games['2']['game_id'] = '2'
+game_id_counter = 9
+
+class User(UserMixin):
+    def __init__(self, name, img):
+        self.id = name
+        self.name = name
+        self.img = img
+
+tom=User("Tom", "img1")
+rebort=User("Rebort", "img2")
+
+users = {"Tom": tom, "Rebort": rebort}
+# users = [{"name":"Tom", "img":"img1"}, 
+#               {"name":"Rebort", "img":"img2"}]
+
+user_games_list = {"Tom": [1, 2, 3],
                  "Rebort": [3, 4, 5]}
 
-magics_to_place = 3
-game_state = dummy_game_state1
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True)
+
+    def __init__(self, username, img):
+        self.username = username
+        self.img = img
+
+    def __repr__(self):
+        return '<User %r>' % self.username
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        try:
+            return text_type(self.id)
+        except AttributeError:
+            raise NotImplementedError('No `id` attribute - override `get_id`')
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return users[user_id]
 
 @app.route("/")
 def hello():
@@ -73,47 +139,96 @@ def hello_B():
     return render_template("svg.html", game_state=game_state, player=player)
 
 @app.route("/login")
+@app.route("/login/")
 def login():
-    return render_template("login.html", users=users)
+    return render_template("login.html", users=users.keys())
+
+@app.route("/logout")
+def logout():
+    flask_login.logout_user()
+    return redirect("/login")
 
 @app.route("/login/<user>")
 def login_user(user):
-    if user in [a['name'] for a in users]:
-        return redirect("/home/"+user)
+    # if user in [a['name'] for a in users]:
+    if user in users:
+        flask_login.login_user(users[user], force=True)
+        return redirect("/home/")
     return redirect("/login")
 
-@app.route("/home/<user>")
-def home(user):
-    return render_template("home.html", user=user, games=games[user])
+@app.route("/home/")
+@app.route("/home")
+@login_required
+def home():
+    cu = current_user
+    return render_template("home.html", user=cu.name, games=user_games_list[cu.name])
 
-# @app.route("/reset/")
-# def reset():
-#     player = "A"
-#     game_state = new_game_state
-#     socketio.emit('update_board', game_state)
-#     return "OK"
-#     # return render_template("svg.html", game_state=game_state, player=player)
+@app.route("/game/<game_id>")
+@login_required
+def game(game_id):
+    player="A"
+    return render_template("svg.html", game_state=games[game_id], player=player)
 
-def next_player(player):
-    if player == "A":
-        return "B"
-    if player == "B":
-        return "A"
-    return "uhoh"
+def save_game(game_id, game_state):
+    global games
+    games[game_id] = game_state
 
-@app.route("/new_click/<player>/<point>/", methods=["POST"])
-def new_click(player, point):
+def get_game(game_id):
+    return games[game_id]
+
+def get_user_list():
+    return users.keys()
+
+def get_users_game_list(user):
+# don't both with this until we have a database to make life easy.
+    return games
+
+def get_new_game_id():
+    global game_id_counter
+    new_game_id = str(game_id_counter)
+    game_id_counter = game_id_counter + 1
+    return new_game_id
+
+def create_new_game(first_player, second_player):
+    game_id = get_new_game_id()
+    new_game_state = default_new_game_state
+    new_game_state['current_turn'] = first_player
+    new_game_state['playerA'] = first_player
+    new_game_state['playerB'] = second_player
+    save_game(game_id, new_game_state)
+    return game_id
+
+def next_player(game_state):
+    if game_state["current_turn"] == game_state["playerA"]:
+        return game_state["playerB"]
+    else:
+        return game_state["playerA"]
+
+@app.route("/new_game/<player>/")
+@app.route("/new_game/<player>")
+def new_game(player):
+    return render_template("new_game.html", player=player, users=[a for a in get_user_list() if a != player])
+
+@app.route("/new_game/<player>/<opponent>")
+@app.route("/new_game/<player>/<opponent>/")
+def spawn_new_game(player, opponent):
+    game_id = create_new_game(player, opponent)
+    return redirect("/game/"+str(game_id))
+
+
+@app.route("/new_click/<player>/<game_id>/<point>/", methods=["POST"])
+def new_click(player, game_id, point):
     # Check if it's this user's turn
-    if player != game_state["current_turn"]:
-        socketio.emit('update_board', game_state)
+    if player != get_game(game_id)["current_turn"]:
+        socketio.emit('update_board', get_game(game_id))
         return "OK"
-    do_game(player, point)
-    socketio.emit('update_board', game_state)
+    do_game(player, game_id, point)
+    socketio.emit('update_board', get_game(game_id))
     return "OK"
 
-def do_game(player, point):
+def do_game(player, game_id, point):
     # manage game logic
-
+    game_state = get_game(game_id)
     if (game_state["setup"] == True):
         # change ownership of point if a user selects one
         if game_state[point] == empty_point:
@@ -122,7 +237,7 @@ def do_game(player, point):
                 magics_to_place = magics_to_place - 1
             else:
                 game_state[point] = player
-            game_state["current_turn"] = next_player(player)
+            game_state["current_turn"] = next_player(game_state)
         return
 
     if (game_state["selected"] == point):
@@ -134,7 +249,7 @@ def do_game(player, point):
             # make sure the stack belongs to this player
             game_state["selected"] = point
     else:
-        if check_valid_move(game_state["selected"], point, player):
+        if check_valid_move(game_state, game_state["selected"], point, player):
             # move a stack
             # add stack from old location onto the stack at the new location
             [game_state[point].append(a) for a in game_state[game_state["selected"]]]
@@ -142,20 +257,21 @@ def do_game(player, point):
             game_state[game_state["selected"]] = empty_point
             game_state["selected"] = ""
             game_state["current_turn"] = next_player(player)
-    check_for_stranded_islands()
+    check_for_stranded_islands(game_state)
+    save_game(game_id, game_state)
     return
 
-def check_valid_move(start_point, end_point, player):
+def check_valid_move(game_state, start_point, end_point, player):
     if game_state[end_point] == empty_point:
         # is destination empty?
         return False
-    if surrounded(start_point):
+    if surrounded(game_state, start_point):
         return False
-    if not check_move_length(start_point, end_point):
+    if not check_move_length(game_state, start_point, end_point):
         return False
     return True
 
-def check_move_length(start_point, end_point):
+def check_move_length(game_state, start_point, end_point):
         status = True
         move_length = 0
         row_move = ord(end_point[0]) - ord(start_point[0])
@@ -184,21 +300,20 @@ def check_move_length(start_point, end_point):
             return False
         return True
 
-def check_for_stranded_islands():
-    islands = get_islands(game_points)
+def check_for_stranded_islands(game_state):
+    islands = get_islands(game_state, game_points)
     for island in islands:
         stranded = True
         for point in island:
             if 'magic' in game_state[point]:
                 stranded = False
-                print point
                 break
         if stranded:
             for a in island:
                 game_state[a] = empty_point
     return
 
-def surrounded(point):
+def surrounded(game_state, point):
     # check if a point is surrounded.
     # only tiles that are not surrounded are allowed to move
     edge_points = ['']
@@ -243,12 +358,12 @@ def get_valid_neighbours(point):
     neighbours = [a for a in neighbours if '`' not in a]
     return neighbours
 
-def get_islands(searchspace):
+def get_islands(game_state, searchspace):
     unsearched_land = list(searchspace)
     islands = []
     island = []
     while True:
-        island = build_island(unsearched_land[0], None)
+        island = build_island(game_state, unsearched_land[0], None)
         if not island:
             unsearched_land.remove(unsearched_land[0])
         else:
@@ -259,7 +374,7 @@ def get_islands(searchspace):
         pass
     return islands
 
-def build_island(start_point="c1", island=None):
+def build_island(game_state, start_point="c1", island=None):
     # find islands of points that don't hold a magic piece
     # if game_state[start_point] == "" or game_state[start_point] == [""]:
     if game_state[start_point] == empty_point:
@@ -273,7 +388,7 @@ def build_island(start_point="c1", island=None):
     for a in neighbours:
         if a in island:
             continue
-        land = build_island(a, island)
+        land = build_island(game_state, a, island)
         if land:
             [island.append(b) for b in land if b not in island]
     return island

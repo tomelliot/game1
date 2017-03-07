@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}start a new game{% endblock %}
+
+{% block content %}
+<h1>{{ user }}</h1>
+<p>
+<p>
+{% for user in users %}
+<div class="row">
+    <div class="col-1">
+    </div>
+    <div class="col">
+        <a href="http://127.0.0.1:5000/new_game/{{ player }}/{{ user }} "> {{ user }} </a>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
