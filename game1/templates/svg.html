@@ -21,14 +21,17 @@
 
 <script>
     var xmlns = "http://www.w3.org/2000/svg";
+    var game_state = {{ game_state | tojson}}
+    var game_id = game_state['game_id']
 
     var point_diameter = 20
     var highlight_diameter = 2*point_diameter
     var tile_diameter = 20
     var tile_offset = tile_diameter/4
 
-
     var player = '{{ player }}'
+    var playerA = game_state['playerA']
+    var playerB = game_state['playerB']
     var Cols = ['a', 'b', 'c', 'd','e','f','g','h','i','j','k']
     var Rows = [1, 2, 3, 4, 5]
     var nbHexAcross = Cols.length
@@ -40,8 +43,6 @@
     var points = [] // holds the location & state of each point
     var highlights = [] // holds the location & state of each point
     var tiles = [] // holds the location & state of each point
-    var game_state = {{ game_state | tojson}}
-    var game_id = game_state['game_id']
 
     function point (name, x, y) {
         this.name = name;
@@ -108,10 +109,10 @@
         g.appendChild(pt);
         for (var i in thisPoint.state) {
             switch(thisPoint.state[i]) {
-                case "A":
+                case playerA:
                     var color = "green"
                     break;
-                case "B":
+                case playerB:
                     var color = "blue"
                     break;
                 case "magic":
