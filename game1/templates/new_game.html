@@ -11,7 +11,7 @@
     <div class="col-1">
     </div>
     <div class="col">
-        <a href="http://127.0.0.1:5000/new_game/{{ player }}/{{ user }} "> {{ user }} </a>
+        <a href="http://127.0.0.1:5000/new_game/{{ user['id'] }} "> {{ user['username'] }} </a>
     </div>
 </div>
 {% endfor %}

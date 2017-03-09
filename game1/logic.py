@@ -1,5 +1,8 @@
-from game1.db import get_game, save_game, games
-import game1.db
+from game1 import db_api
+from game1.db_api import magic_point, empty_point
+
+player_A_token = "A"
+player_B_token = "B"
 
 empty_point = [] # we use this to represent any point on the board that doesn't have any tiles on it
 game_points =   ["c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1",
@@ -7,12 +10,6 @@ game_points =   ["c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1",
                             "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "i3", "j3", "k3", 
                             "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "i4", "j4", 
                             "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "i5"]
-
-magics_to_place = 3
-
-
-def create_new_game(first_player, second_player, game_state):
-    return game1.db.create_new_game(first_player, second_player, game_state)
 
 def next_player(game_state):
     if game_state["current_turn"] == game_state["playerA"]:
@@ -22,16 +19,26 @@ def next_player(game_state):
 
 def do_game(player, game_id, point):
     # manage game logic
-    game_state = get_game(game_id)
+    game_state = db_api.get_game_state(game_id)
+    if game_state["playerA"] == player:
+        player_token = player_A_token
+    else:
+        player_token = player_B_token
+
     if (game_state["setup"] == True):
         # change ownership of point if a user selects one
         if game_state[point] == empty_point:
-            if magics_to_place:
-                game_state[point] = "magic"
-                magics_to_place = magics_to_place - 1
+            if game_state["magics_to_place"]:
+                game_state[point] = magic_point
+                game_state["magics_to_place"] = game_state["magics_to_place"] - 1
             else:
-                game_state[point] = player
+                game_state[point] = player_token
             game_state["current_turn"] = next_player(game_state)
+        game_state["setup"] = False
+        for point in game_points:
+            if game_state[point] != empty_point:
+                game_state["setup"] = True
+        db_api.save_game(game_id, game_state)
         return
 
     if (game_state["selected"] == point):
@@ -39,7 +46,7 @@ def do_game(player, game_id, point):
         game_state["selected"] = ""
     elif (game_state["selected"] == ""):
         # select a point
-        if (game_state[point][-1] == player):
+        if (game_state[point][-1] == player_token):
             # make sure the stack belongs to this player
             game_state["selected"] = point
     else:
@@ -52,7 +59,7 @@ def do_game(player, game_id, point):
             game_state["selected"] = ""
             game_state["current_turn"] = next_player(game_state)
     check_for_stranded_islands(game_state)
-    save_game(game_id, game_state)
+    db_api.save_game(game_id, game_state)
     return
 
 def check_valid_move(game_state, start_point, end_point, player):
@@ -99,7 +106,7 @@ def check_for_stranded_islands(game_state):
     for island in islands:
         stranded = True
         for point in island:
-            if 'magic' in game_state[point]:
+            if magic_point in game_state[point]:
                 stranded = False
                 break
         if stranded:

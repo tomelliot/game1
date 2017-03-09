@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block title %}start a new game{% endblock %}
+
+{% block content %}
+<h1>New User</h1>
+<br>
+<form class="form-inline">
+  <label class="sr-only" for="inlineFormInput">Name</label>
+  <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" id="inlineFormInput" placeholder="Username" name="username">
+  <button type="submit" class="btn btn-primary" formmethod="post" formaction="http://127.0.0.1:5000/new_user/create">Submit</button>
+</form>
+{% endblock %}

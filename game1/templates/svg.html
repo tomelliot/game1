@@ -22,7 +22,7 @@
 <script>
     var xmlns = "http://www.w3.org/2000/svg";
     var game_state = {{ game_state | tojson}}
-    var game_id = game_state['game_id']
+    var game_id = {{ game_id }}
 
     var point_diameter = 20
     var highlight_diameter = 2*point_diameter
@@ -109,13 +109,13 @@
         g.appendChild(pt);
         for (var i in thisPoint.state) {
             switch(thisPoint.state[i]) {
-                case playerA:
+                case "A":
                     var color = "green"
                     break;
-                case playerB:
+                case "B":
                     var color = "blue"
                     break;
-                case "magic":
+                case "m":
                     var color = "orange"
                     break;
                 default:

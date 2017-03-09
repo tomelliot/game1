@@ -10,8 +10,11 @@
     <div class="col-1">
     </div>
     <div class="col">
-        <a href="http://127.0.0.1:5000/login/{{ user }} "> {{ user }} </a>
+        <a href="http://127.0.0.1:5000/login/{{ user['id'] }} "> {{ user['username'] }} </a>
     </div>
 </div>
 {% endfor %}
+<div class="row">
+    <a href="http://127.0.0.1:5000/new_user/">New User</a>
+</div>
 {% endblock %}
