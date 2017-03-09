@@ -89,12 +89,6 @@ def get_user(id=None, user_name=None):
 def get_users_game_list(user):
     return user.games.all()
 
-def get_new_game_id():
-    global game_id_counter
-    new_game_id = str(game_id_counter)
-    game_id_counter = game_id_counter + 1
-    return new_game_id
-
 def create_new_game(first_player, second_player, game_state=None):
     if game_state:
         new_game_state = game_state
