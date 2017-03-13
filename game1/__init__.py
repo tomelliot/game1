@@ -10,6 +10,11 @@ app = Flask(__name__)
 # load secret key from file. Need to specify a secret key so flask can manage client sessions
 app.config.from_pyfile('configuration.py')
 
+# app.config['APPLICATION_ROOT'] = "/game1"
+# application = DispatcherMiddleware(Flask('dummy_app'), {
+#         app.config['APPLICATION_ROOT']: app,
+#     })
+
 # manage user logins
 login_manager = LoginManager()
 login_manager.init_app(app)

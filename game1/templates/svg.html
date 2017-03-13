@@ -4,7 +4,8 @@
 {% block head %}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
         <script>
-            var socket = io.connect('http://127.0.0.1:5000');
+            var socket = io.connect();
+            // var socket = io.connect('http://127.0.0.1:5000');
             socket.on('connect', function() {
             socket.emit('my event', {data: 'I\'m connected!'});
             });
@@ -94,7 +95,7 @@
         // can't use $.post() to send JSON data - need access to contentType:
         $.ajax({
             type: 'POST',
-            url: "http://127.0.0.1:5000/new_click/"+ player +"/"+game_id+"/"+pointName+"/",
+            url: "/new_click/"+ player +"/"+game_id+"/"+pointName+"/",
             data: JSON.stringify(game_state),
             success: function(data) {console.log("POST successful"); console.log(data)},
             contentType: "application/json",
