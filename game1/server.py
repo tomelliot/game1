@@ -1,7 +1,6 @@
-from flask import Flask
+from flask import Flask, url_for
 from flask import render_template
 from flask import request
-from flask import jsonify
 from flask import redirect
 from flask_login import login_required, current_user
 import flask_login
@@ -14,30 +13,23 @@ from game1.models import User, Game
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 admin = Admin(app, name='game1', template_mode='bootstrap3')
-admin.add_view(ModelView(User, db.session))
-admin.add_view(ModelView(Game, db.session))
+# Create customized model view class
+class MyModelView(ModelView):
+    def is_accessible(self):
+        return (current_user.is_authenticated and current_user.admin)
 
+admin.add_view(MyModelView(User, db.session))
+admin.add_view(MyModelView(Game, db.session))
+
+login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    # return users[user_id]
     return db_api.get_user(id=user_id)
 
 @app.route("/")
 def hello():
-    player = "A"
-    game_state = game_state["current_turn"]
-    return render_template("svg.html", game_state=game_state, player=player)
-
-@app.route("/A/")
-def hello_A():
-    player = "A"
-    return render_template("svg.html", game_state=game_state, player=player)
-
-@app.route("/B/")
-def hello_B():
-    player = "B"
-    return render_template("svg.html", game_state=game_state, player=player)
+    return redirect(url_for("home"))
 
 @app.route("/login")
 @app.route("/login/")
@@ -52,24 +44,24 @@ def new_user():
 @app.route("/new_user/create/", methods=["POST"])
 @app.route("/new_user/create", methods=["POST"])
 def new_user_create():
-    print request.form
-    print request.form['username']
     db_api.new_user(request.form['username'])
-    return redirect('/login/')
-
+    return redirect(url_for("login"))
 
 @app.route("/logout")
+@app.route("/logout/")
 def logout():
     flask_login.logout_user()
-    return redirect("/login")
+    return redirect(url_for("login"))
 
 @app.route("/login/<user_id>")
+@app.route("/login/<user_id>/")
 def login_user(user_id):
     user = db_api.get_user(id=user_id)
     if user:
+        flask_login.logout_user()
         flask_login.login_user(user, force=True)
-        return redirect("/home/")
-    return redirect("/login")
+        return redirect(url_for("home"))
+    return redirect(url_for("login"))
 
 @app.route("/home/")
 @app.route("/home")
@@ -79,6 +71,7 @@ def home():
     return render_template("home.html", user=cu.username, games=db_api.get_users_game_list(current_user))
 
 @app.route("/game/<game_id>")
+@app.route("/game/<game_id>/")
 @login_required
 def game(game_id):
     return render_template("svg.html", game_state=db_api.get_game_state(game_id), game_id=game_id, player=current_user.username)
@@ -92,7 +85,7 @@ def new_game():
 @app.route("/new_game/<opponent_id>/")
 def spawn_new_game(opponent_id):
     game_id = db_api.create_new_game(current_user, db_api.get_user(id=int(opponent_id)))
-    return redirect("/game/"+str(game_id))
+    return redirect(url_for("game", game_id=game_id))
 
 @app.route("/new_click/<player>/<game_id>/<point>/", methods=["POST"])
 def new_click(player, game_id, point):
