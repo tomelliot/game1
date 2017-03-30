@@ -29,10 +29,10 @@ def do_game(player, game_id, point):
         # change ownership of point if a user selects one
         if game_state[point] == empty_point:
             if game_state["magics_to_place"]:
-                game_state[point] = magic_point
+                game_state[point] = [magic_point]
                 game_state["magics_to_place"] = game_state["magics_to_place"] - 1
             else:
-                game_state[point] = player_token
+                game_state[point] = [player_token]
             game_state["current_turn"] = next_player(game_state)
         game_state["setup"] = False
         for point in game_points:
