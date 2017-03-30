@@ -3,7 +3,7 @@
 ## To do
 1. Backend
  - [x] Backend maintains game-state between users
- - [ ] Maintain multiple active games
+ - [x] Maintain multiple active games
  - [x] User logins
  - [x] Backend enforces user turns
  - [x] Backend enforces game rules
@@ -15,5 +15,5 @@
  - [ ] Only current player has tiles highlighted, not both players
  - [ ] Skin game board so it's not ugly
  - [ ] Draw tile stacks in reverse height order (so tall stacks overlap short stacks)
- - [ ] User login
+ - [x] User login
  - [x] Select active game
