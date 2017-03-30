@@ -38,8 +38,8 @@ def do_game(player, game_id, point):
         for point in game_points:
             if game_state[point] == empty_point:
                 game_state["setup"] = True
-            else:
-                game_state["current_turn"] = game_state["playerA"]  # Once set up is completed, PlayerA (aka white) gets to make the first move
+        if game_state["setup"] == False:
+            game_state["current_turn"] = game_state["playerA"]  # Once set up is completed, PlayerA (aka white) gets to make the first move
         db_api.save_game(game_id, game_state)
         return
 
