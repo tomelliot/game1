@@ -76,14 +76,14 @@ def get_user_list():
 def get_users():
     return models.User.query.all()
 
-def get_user_names():
+def get_usernames():
     return [a.username for a in models.User.query.all()]
 
-def get_user(id=None, user_name=None):
+def get_user(id=None, username=None):
     if id:
         return models.User.query.filter_by(id=id).first()
-    if user_name:
-        return models.User.query.filter_by(user_name=user_name)
+    if username:
+        return models.User.query.filter_by(username=username)
     return None
 
 def get_users_game_list(user):
