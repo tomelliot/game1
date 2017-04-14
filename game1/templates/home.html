@@ -4,19 +4,55 @@
 {% block title %}{{ user }}'s games{% endblock %}
 
 {% block content %}
-<h1>{{ user }}</h1>
-<p>
-<p>
-{% for game in games %}
 <div class="row">
-    <div class="col-1">
-    </div>
-    <div class="col">
-        <a href="/game/{{ game['id'] }} "> {{ game['players'] }} </a>
-    </div>
+<h2>Active games</h2>
 </div>
+<div class="row">
+<p>
+</div>
+<div class="row">
+<table class="table table-hover">
+<tr>
+    <th>
+        <a href="/new_game/">New Game?</a>
+    </th>
+</tr>
+{% for game in games %}
+<tr>
+    <th>
+        {% if user == game['players'][0].username %}
+        <a href="/game/{{ game['id'] }} "> {{ game['players'][1].username }} </a>
+        {% else %}
+        <a href="/game/{{ game['id'] }} "> {{ game['players'][0].username }} </a>
+        {% endif %}
+    </th>
+</tr>
 {% endfor %}
-<p>
-<p>
-<a href="/new_game/">New Game</a>
+</table>
+</div>
+
 {% endblock %}
+
+
+<!-- <div class="row">
+<h2>login</h2>
+</div>
+<div class="row">
+<p>
+</div>
+<div class="row">
+<table class="table table-hover">
+<tr>
+    <th>
+        <a href="/new_user/">New User?</a>
+    </th>
+</tr>
+{% for user in users %}
+<tr>
+    <th>
+        <a href="/login/{{ user['id'] }} "> {{ user['username'] }} </a>
+    </th>
+</tr>
+{% endfor %}
+</table>
+</div> -->

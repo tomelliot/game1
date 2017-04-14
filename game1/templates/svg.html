@@ -14,13 +14,23 @@
 {% endblock %}
 
 {% block content %}
-
-<h1>player {{ player }} game1</h1>
-
-<svg id=g width="500" height="100" style='background-color: grey;'>
+<div class="row">
+<h2>{{ game_state["playerA"] }} vs {{ game_state["playerB"] }}</h2>
+</div>
+<div class="row">
+<p>
+</div>
+<div class="row">
+<svg id=g width="500" height="100" style='background-color: #ededed;'>
 </svg>
+</div>
 
 <script>
+    var back_colour = '#ededed' 
+    var magic_colour = '#e51c23'
+    var playerA_colour = '#2196f3'
+    var playerB_colour = '#4caf50'
+
     var xmlns = "http://www.w3.org/2000/svg";
     var game_state = {{ game_state | tojson}}
     var game_id = {{ game_id }}
@@ -111,13 +121,13 @@
         for (var i in thisPoint.state) {
             switch(thisPoint.state[i]) {
                 case "A":
-                    var color = "green"
+                    var color = playerA_colour
                     break;
                 case "B":
-                    var color = "blue"
+                    var color = playerB_colour
                     break;
                 case "m":
-                    var color = "orange"
+                    var color = magic_colour
                     break;
                 default:
                     var color = "white"
@@ -147,7 +157,7 @@
             if (thisPoint.highlight) {
                 pointsToHighlight.push(h)
             } else {
-                h.setAttribute("fill", "grey");
+                h.setAttribute("fill", back_colour);
             }
         }
 
