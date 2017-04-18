@@ -41,12 +41,15 @@ class game1():
             self.state["current_turn"] = self.state["playerA"]
         return self.state["current_turn"]
 
-    def do_game(self, player, point):
-        # manage game logic
-        if self.state["playerA"] == player:
+    def player_token(self):
+        if self.state["playerA"] == self.state['current_turn']:
             player_token = player_A_token
         else:
             player_token = player_B_token
+        return player_token
+
+    def do_game(self, player, point):
+        # manage game logic
 
         if (self.state["setup"] == True):
             # change ownership of point if a user selects one
@@ -55,7 +58,7 @@ class game1():
                     self.state[point] = [magic_point]
                     self.state["magics_to_place"] = self.state["magics_to_place"] - 1
                 else:
-                    self.state[point] = [player_token]
+                    self.state[point] = [self.player_token()]
                 self.next_player()
             self.state["setup"] = False
             for point in game_points:
@@ -71,7 +74,7 @@ class game1():
             self.state["selected"] = ""
         elif (self.state["selected"] == ""):
             # select a point
-            if (self.state[point][-1] == player_token):
+            if (self.state[point][-1] == self.player_token()):
                 # make sure the stack belongs to this player
                 self.state["selected"] = point
         else:
@@ -84,9 +87,7 @@ class game1():
                 self.state["selected"] = ""
                 self.next_player()
         self.check_for_stranded_islands()
-        if not self.get_valid_moves(player_token):
-            print "next player"
-            print self.get_valid_moves(player_token)
+        if not self.get_valid_moves(self.player_token()):
             self.next_player()
         self.check_for_winner()
         self.save_game()
