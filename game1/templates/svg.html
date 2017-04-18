@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% block title %}{{ player }}{% endblock %}
+
+{% block title %}{{ game_state["playerA"] }} vs {{ game_state["playerB"] }}{% endblock %}
 
 {% block head %}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
@@ -14,16 +15,45 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-<h2>{{ game_state["playerA"] }} vs {{ game_state["playerB"] }}</h2>
-</div>
+
 <div class="row">
 <p>
 </div>
 <div class="row">
-<svg id=g width="500" height="100" style='background-color: #ededed;'>
-</svg>
+    <div class="col-md-8">
+        <svg id=g class="img-responsive center-block" width="720" height="360" viewBox="0 0 720 360" preserveAspectRatio="xMidYMid" style='background-color: #ededed;'>
+        </svg>
+    </div>
+    <div class="col-md-2">
+        <table class="table">
+            <tr {% if game_state['current_turn'] == game_state['playerA'] %} class="success" {% endif %}>
+                <td>
+                        <svg id=playerAg height="75" width="50" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid">
+                            <circle cx="25" cy="25" r="20" stroke="black" fill='#2196f3'/></circle>
+                            <text x="50%" y="70%" text-anchor="middle" font-size="30" font-family="Helvetica Neue""></text>
+                        </svg>
+                </td>
+                <td>
+                    <h3>{{ game_state["playerA"] }}</h3>
+                </td>
+            </tr>
+            <tr {% if game_state['current_turn'] == game_state['playerB'] %} class="success" {% endif %}>
+                <td>
+                        <svg id=playerBg height="75" width="50" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid">
+                            <circle cx="25" cy="25" r="20" stroke="black" fill='#4caf50'/></circle>
+                            <text x="50%" y="70%" text-anchor="middle" font-size="30" font-family="Helvetica Neue"">5</text>
+                        </svg>
+                </td>
+                <td>
+                    <h3>{{ game_state["playerB"] }}</h3>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-md-1">
+    </div>
 </div>
+
 
 <script>
     var back_colour = '#ededed' 
@@ -50,6 +80,9 @@
     var hexHeight = 3*tile_diameter
     var svgWidth = hexWidth*(nbHexAcross+1)
     var svgHeight = (Rows.length+1)*hexHeight
+
+    var playerAscore = 0;
+    var playerBscore = 0;
 
     var points = [] // holds the location & state of each point
     var highlights = [] // holds the location & state of each point
@@ -168,9 +201,18 @@
     }
 
     function updateBoard(new_game_state) {
+        playerAscore = 0
+        playerBscore = 0
         for (var i in points) {
             if (points.hasOwnProperty(i)) {
                 points[i].state = new_game_state[points[i].name]
+                last_element_idx = points[i].state.length
+                if (points[i].state[points[i].state.length-1] == "A") {
+                    playerAscore += points[i].state.length
+                }
+                else if (points[i].state[points[i].state.length-1] == "B") {
+                    playerBscore += points[i].state.length
+                }
                 if (new_game_state["selected"] == i) {
                     points[i].highlight = true;
                 } else {
@@ -183,11 +225,16 @@
         updatePoints();
     }
 
+    function addScore(playerA_score, playerB_score) {
+        playerAg.getElementsByTagName('text')[0].textContent = playerA_score
+        playerBg.getElementsByTagName('text')[0].textContent = playerB_score
+    }
+
     function generateGrid() {
-        for (var rowIdx = Rows.length - 1; rowIdx >= 0; rowIdx--) {
+        for (var rowIdx = 0; rowIdx <= Rows.length - 1; rowIdx++) {
             var yOffset = 1;
             xOffset = rowIdx*0.5;
-            for (var colIdx = Cols.length - 1; colIdx >= 0; colIdx--) {
+            for (var colIdx = 0; colIdx <= Cols.length - 1; colIdx++) {
                 name = Cols[colIdx]+Rows[rowIdx];
                 if (["a1", "a2", "b1", "j5", "k4", "k5"].indexOf(name) >= 0) {
                     // don't generate points where they don't exist on the board
@@ -209,9 +256,10 @@
     });
 
     $(function() {
-        resizeSvg(svgWidth, svgHeight);
+        // resizeSvg(svgWidth, svgHeight);
         generateGrid();
         updateBoard(game_state);
+        addScore(playerAscore, playerBscore);
     });
 </script>
 {% endblock %}
