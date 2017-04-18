@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 import flask_login
 
 from game1 import app, db, login_manager, socketio
-from game1.logic import do_game
+from game1 import logic
 from game1 import db_api
 
 from game1.models import User, Game
@@ -93,7 +93,8 @@ def new_click(player, game_id, point):
     if player != db_api.get_game_state(game_id)["current_turn"]:
         socketio.emit('update_board', db_api.get_game_state(game_id))
         return "OK"
-    do_game(player, game_id, point)
+    game = logic.game1(game_id = game_id)
+    game.do_game(player, point)
     socketio.emit('update_board', db_api.get_game_state(game_id))
     return "OK"
 
