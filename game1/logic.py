@@ -178,8 +178,7 @@ def get_islands(game_state, searchspace):
     return islands
 
 def build_island(game_state, start_point="c1", island=None):
-    # find islands of points that don't hold a magic piece
-    # if game_state[start_point] == "" or game_state[start_point] == [""]:
+    # find all points connected to start_point using a recursive depth first search
     if game_state[start_point] == empty_point:
         return
     if island is None:

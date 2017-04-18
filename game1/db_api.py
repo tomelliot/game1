@@ -18,30 +18,6 @@ default_new_game_state = {"current_turn": "A",
                                 "a4": empty_point, "b4": empty_point, "c4": empty_point, "d4": empty_point, "e4": empty_point, "f4": empty_point, "g4": empty_point, "h4": empty_point, "i4": empty_point, "j4": empty_point, 
                                 "a5": empty_point, "b5": empty_point, "c5": empty_point, "d5": empty_point, "e5": empty_point, "f5": empty_point, "g5": empty_point, "h5": empty_point, "i5": empty_point}
 
-dummy_game_state = {"current_turn": "A",
-                                "playerA":"A",
-                                "playerB":"B",
-                                "setup": False,
-                                "magics_to_place":3,
-                                "selected": "",
-                                "c1": [magic_point], "d1": ["B"], "e1": ["A"], "f1": ["B"], "g1": ["A"], "h1": ["B"], "i1": ["A"], "j1": ["B"], "k1": ["A"],
-                                "b2": ["A"], "c2": [magic_point], "d2": ["A"], "e2": ["B"], "f2": ["A"], "g2": ["B"], "h2": ["A"], "i2": ["B"], "j2": ["A"], "k2": ["B"], 
-                                "a3": ["A"], "b3": ["B"], "c3": ["A"], "d3": ["B"], "e3": ["A"], "f3": ["B"], "g3": ["A"], "h3": ["B"], "i3": ["A"], "j3": ["B"], "k3": ["A"], 
-                                "a4": ["A"], "b4": ["B"], "c4": ["A"], "d4": ["B"], "e4": ["A"], "f4": [magic_point], "g4": ["A"], "h4": ["B"], "i4": ["A"], "j4": ["B"], 
-                                "a5": ["A"], "b5": ["B"], "c5": ["A"], "d5": ["B"], "e5": ["A"], "f5": ["B"], "g5": ["A"], "h5": ["B"], "i5": ["A"]}
-
-dummy_game_state1 = {"current_turn": "Tom",
-                                "playerA":"Tom",
-                                "playerB":"Rebort",
-                                "setup": False,
-                                "magics_to_place":3,
-                                "selected": "",
-                                "c1": [magic_point], "d1": ["B"], "e1": ["A"], "f1": empty_point, "g1": ["A"], "h1": ["B"], "i1": ["A"], "j1": ["B"], "k1": ["A"],
-                                "b2": ["A"], "c2": [magic_point], "d2": ["A"], "e2": empty_point, "f2": ["A"], "g2": ["B"], "h2": ["A"], "i2": ["B"], "j2": ["A"], "k2": ["B"], 
-                                "a3": ["A"], "b3": ["B"], "c3": ["A"], "d3": empty_point, "e3": ["A"], "f3": ["B"], "g3": ["A"], "h3": ["B"], "i3": ["A"], "j3": ["B"], "k3": ["A"], 
-                                "a4": ["A"], "b4": ["B"], "c4": ["A"], "d4": empty_point, "e4": ["A"], "f4": empty_point, "g4": ["A"], "h4": ["B"], "i4": ["A"], "j4": ["B"], 
-                                "a5": ["A"], "b5": ["B"], "c5": ["A"], "d5": empty_point, "e5": [magic_point], "f5": empty_point, "g5": ["A"], "h5": ["B"], "i5": ["A"]}
-
 def new_user(username):
     new_user = models.User(username)
     db.session.add(new_user)
