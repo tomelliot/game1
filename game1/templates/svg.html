@@ -26,7 +26,7 @@
     </div>
     <div class="col-md-2">
         <table class="table">
-            <tr {% if game_state['current_turn'] == game_state['playerA'] %} class="success" {% endif %}>
+            <tr id="playerAscore">
                 <td>
                         <svg id=playerAg height="75" width="50" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid">
                             <circle cx="25" cy="25" r="20" stroke="black" fill='#2196f3'/></circle>
@@ -37,7 +37,7 @@
                     <h3>{{ game_state["playerA"] }}</h3>
                 </td>
             </tr>
-            <tr {% if game_state['current_turn'] == game_state['playerB'] %} class="success" {% endif %}>
+            <tr id="playerBscore">
                 <td>
                         <svg id=playerBg height="75" width="50" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid">
                             <circle cx="25" cy="25" r="20" stroke="black" fill='#4caf50'/></circle>
@@ -200,6 +200,18 @@
         }
     }
 
+    function updateScore(playerA_score, playerB_score) {
+        playerAg.getElementsByTagName('text')[0].textContent = playerA_score
+        playerBg.getElementsByTagName('text')[0].textContent = playerB_score
+        if (game_state['current_turn'] == game_state['playerA']) {
+            $("#playerAscore").attr('class','success')
+            $("#playerBscore").attr('class','')
+        } else {
+            $("#playerAscore").attr('class','')
+            $("#playerBscore").attr('class','success')
+        }
+    }
+
     function updateBoard(new_game_state) {
         playerAscore = 0
         playerBscore = 0
@@ -223,11 +235,7 @@
         removeTiles(tiles);
         updateHighlights();
         updatePoints();
-    }
-
-    function addScore(playerA_score, playerB_score) {
-        playerAg.getElementsByTagName('text')[0].textContent = playerA_score
-        playerBg.getElementsByTagName('text')[0].textContent = playerB_score
+        updateScore(playerAscore, playerBscore);
     }
 
     function generateGrid() {
@@ -259,7 +267,6 @@
         // resizeSvg(svgWidth, svgHeight);
         generateGrid();
         updateBoard(game_state);
-        addScore(playerAscore, playerBscore);
     });
 </script>
 {% endblock %}
